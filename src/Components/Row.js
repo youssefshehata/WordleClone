@@ -1,128 +1,104 @@
-import React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import Cell from './Cell';
+import { act } from 'react-dom/test-utils';
 
+const Row = ({ idx, max, actualword, won, setWon, current, sendSub, colorHistory, setColorHistory, wordHistory, setWordHistory }) => {
+  const [submited, setSubmitted] = useState(false);
+  const [word, setWord] = useState([]);
+  const [locked, setLocked] = useState(false);
+  const max_letters = max;
 
+  useEffect(() => {
+    if (idx !== current) return;
 
+    const handleKeyInput = (e) => {
+      if (locked || won) return;
+      if (e.key === 'Backspace') {
+        setWord(prevWord => prevWord.slice(0, -1));
+      }
+      if (e.key === 'Enter') {
+        handleSubmit(e);
+      }
+      if (/[a-zA-Z]/.test(e.key) && e.key.length === 1 && word.length < max_letters) {
+        setWord(prevWord => [...prevWord, e.key]);
+      }
+    };
 
+    // Attach the event listener when the component mounts
+    window.addEventListener('keydown', handleKeyInput);
 
-
-// const Cell = ({ char }) => {
-
-//   return (
-//     <div
-//       style={{
-//         border: '1px solid black',
-//         width: '30px',
-//         height: '30px',
-//         display: 'grid',
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//       }}
-//     >
-//       {char}
-//     </div>
-//   )
-// }
-
-const Row = ({ max, input_word }) => {
-  const [word, setword] = useState([])
-  const [locked, setLocked] = useState(false)
-  const max_letters = max
-  //5 letters no spaces exists in words 
-  //and only then we can pass it to our logic 
-
-
-  // const handleInputChange = (e) => {
-  //   const value = e.target.value;
-  //   if (locked) {
-  //     return;
-  //   }
-  //   if (value.length <= max_letters) {
-  //     setword(value);
-  //   }
-
-  //   setword(e.target.value);
-  // };
-
-
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyInput);
+    };
+  }, [word, locked, idx, current, won]);
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (word.length === max_letters && word.indexOf(" ") === -1) {
-      console.log("word is valid", word.length)
-      setLocked(true)
-      const newWord = word.join("")
-      input_word(newWord)
-    } else {
-      console.log("word is not valid", word.length)
-    }
-  };
+    if (idx !== current) return;
 
+    if (word.indexOf(" ") === -1 && word.join("") === actualword) {
+      setLocked(true);
+      setSubmitted(true);
+      sendSub(idx + 1);
+      setTimeout(() => {
+        setWon(true);
+      }, 12);
+    } else if (word.length === max_letters && word.indexOf(" ") === -1) {
+      word.forEach((char) => {
+        if (actualword.indexOf(char) !== -1) {
+          setColorHistory((prevHistory) => ({ ...prevHistory, [char]: prevHistory[char] || indexColor(char, actualword.indexOf(char), actualword) }));
+          setLocked(true);
+          setSubmitted(true);
 
-  const handleKeyDown = (e) => {
-    // Check if the pressed key is Enter (key code 13)
-    if (e.key === 'Enter') {
-
-      handleSubmit(e);
-    }
-  };
-
-
-
-  const handleBackspace = (index, e) => {
-    if (locked) return;
-    if (index > 0) {
-      e.target.value = "";
-      setword(prevWord => [...prevWord.slice(0, -1)]);
-
-      inputRefs.current[index - 1].current.focus();
-    }
-  };
-  const cells = Array.from({ length: 5 }); // Number of cells
-  const inputRefs = useRef(cells.map(() => React.createRef()));
-
-  const handleInputChange = (index, e) => {
-    const value = e.target.value;
-
-    if (locked) {
-      return;
-    }
-    if (word.length <= max_letters) {
-      console.log(word, value)
-      setword(prevWord => [...prevWord, value]);
-    }
-
-    if (index < inputRefs.current.length - 1) {
-
-      inputRefs.current[index + 1].current.focus();
+          sendSub(idx + 1);
+        }
+      });
     }
   };
 
   useEffect(() => {
-    inputRefs.current[0].current.focus(); // Focus on the first input field initially
-  }, []);
+    if (submited) {
+      setWordHistory((prevHistory) => ({ ...prevHistory, [idx]: prevHistory[idx] || word }));
 
+    }
+  })
+
+  const indexColor = (char, index, actualword) => {
+    if (idx !== current) return;
+
+    if (actualword[index] === char) return 'green';
+
+    if (actualword.indexOf(char) !== -1) return 'orange';
+
+    return '';
+  };
+
+  if (idx !== current) {
+    return (
+      <div className="row">
+        {Array.from({ length: max_letters }).map((_, index) => (
+          <React.Fragment key={index}>
+
+            {
+              wordHistory[idx] ?
+                (<Cell classy={colorHistory[wordHistory[idx][index]]} char={wordHistory[idx][index]} />) :
+                (<Cell classy=" " char=" " />)
+
+            }
+
+          </React.Fragment>
+        ))}
+      </div>
+    )
+  }
 
 
   return (
     <div className="row">
-      {/* <input type="text" value={word} maxLength={max_letters} onKeyDown={handleKeyDown} onChange={handleInputChange} /> */}
-      {cells.map((char, index) => (
-        <input
-          key={index}
-          ref={inputRefs.current[index]}
-          type="text"
-          maxLength="1"
-          className="wordle-cell"
-          onChange={(e) => handleInputChange(index, e)}
-
-
-          onKeyDown={(e) => {
-            if (e.key === 'Backspace') handleBackspace(index, e)
-            if (e.key === 'Enter') handleKeyDown(e)
-
-          }}
-        />
+      {Array.from({ length: max_letters }).map((_, index) => (
+        <React.Fragment key={index}>
+          <Cell classy={submited ? indexColor(word[index], index, actualword) : " "} char={word[index]} />
+        </React.Fragment>
       ))}
     </div>
   );

@@ -1,5 +1,5 @@
 import Grid from './Grid'
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { WordProvider } from './context';
 import { WordContext } from './context';
 
@@ -7,6 +7,7 @@ import { WordContext } from './context';
 const Home = () => {
   const { rightWord, updateRightWord } = useContext(WordContext);
   const [isPopupOpen, setPopupOpen] = useState(false);
+  const [won, setWon] = useState(false);
 
   const PopupModal = ({ onClose, onPlayAgain }) => {
     return (
@@ -21,31 +22,26 @@ const Home = () => {
   };
 
 
-
-  const handleWin = () => {
-    setPopupOpen(true);
-  };
-
   const handleClose = () => {
     setPopupOpen(false);
   };
 
   const handlePlayAgain = () => {
     window.location.reload();
-    setPopupOpen(false);
   };
 
 
-  const onWinning = () => {
-    updateRightWord();
-    handleWin();
+  useEffect(() => {
+    if (won) {
+      setPopupOpen(true);
 
-  }
+    }
+  }, [won])
 
   return (
     <>
       <div className="home">
-        <Grid actualword={rightWord} setWon={onWinning} />
+        <Grid actualword={rightWord} won={won} setWon={setWon} />
         {isPopupOpen && (
           <PopupModal onClose={handleClose} onPlayAgain={handlePlayAgain} />
         )}

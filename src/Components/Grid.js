@@ -1,24 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Row from './Row';
 
-const Grid = ({ actualword, setWon }) => {
+const Grid = ({ actualword, won, setWon }) => {
+
+  const [colorHistory, setColorHistory] = useState({})
+  const [wordHistory, setWordHistory] = useState({})
+  const [current, setCurrent] = useState(0)
+  const submission = (data) => {
+    // Do something with the data in the parent component
+    console.log('Received data from child:', data);
+    setCurrent(data);
+  };
 
 
-  const handle_choice = (word) => {
 
-
-    if (word === actualword) {
-      setWon(true)
-    }
-  }
   return (
-    <div className="grid">
-      <Row max={5} input_word={handle_choice} />
-      <Row max={5} input_word={handle_choice} />
-      <Row max={5} input_word={handle_choice} />
-      <Row max={5} input_word={handle_choice} />
-      <Row max={5} input_word={handle_choice} />
 
+    <div className="grid">
+
+
+      <Row idx={0} max={5} actualword={actualword} won={won} setWon={setWon} current={current} sendSub={submission} colorHistory={colorHistory} setColorHistory={setColorHistory} wordHistory={wordHistory} setWordHistory={setWordHistory} />
+      <Row idx={1} max={5} actualword={actualword} won={won} setWon={setWon} current={current} sendSub={submission} colorHistory={colorHistory} setColorHistory={setColorHistory} wordHistory={wordHistory} setWordHistory={setWordHistory} />
+      <Row idx={2} max={5} actualword={actualword} won={won} setWon={setWon} current={current} sendSub={submission} colorHistory={colorHistory} setColorHistory={setColorHistory} wordHistory={wordHistory} setWordHistory={setWordHistory} />
+      <Row idx={3} max={5} actualword={actualword} won={won} setWon={setWon} current={current} sendSub={submission} colorHistory={colorHistory} setColorHistory={setColorHistory} wordHistory={wordHistory} setWordHistory={setWordHistory} />
+      <Row idx={4} max={5} actualword={actualword} won={won} setWon={setWon} current={current} sendSub={submission} colorHistory={colorHistory} setColorHistory={setColorHistory} wordHistory={wordHistory} setWordHistory={setWordHistory} />
       {/* Your grid content goes here */}
     </div>
   );
