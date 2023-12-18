@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import Cell from './Cell';
-import { act } from 'react-dom/test-utils';
 
-const Row = ({ idx, max, actualword, won, setWon, current, sendSub, colorHistory, setColorHistory, wordHistory, setWordHistory }) => {
+const Row = ({ idx, max, actualword, won, setWon, current, sendSub, keyboardHistory, setkeyboardHistory, wordHistory, setWordHistory }) => {
   const [submited, setSubmitted] = useState(false);
   const [word, setWord] = useState([]);
   const [locked, setLocked] = useState(false);
   const max_letters = max;
+  const indexColor = (char, index, actualword) => {
+    if (idx !== current) return;
+
+    if (actualword[index] === char) return 'green';
+
+    if (actualword.indexOf(char) !== -1) return 'orange';
+
+    return '';
+  };
 
   useEffect(() => {
     if (idx !== current) return;
+
 
     const handleKeyInput = (e) => {
       if (locked || won) return;
@@ -33,6 +42,12 @@ const Row = ({ idx, max, actualword, won, setWon, current, sendSub, colorHistory
     };
   }, [word, locked, idx, current, won]);
 
+  useEffect(() => {
+    if (submited) {
+      setWordHistory((prevHistory) => ({ ...prevHistory, [idx]: prevHistory[idx] || word }));
+    }
+  }, [submited, idx, word, setWordHistory]);
+
   const handleSubmit = (e) => {
     if (idx !== current) return;
 
@@ -43,64 +58,43 @@ const Row = ({ idx, max, actualword, won, setWon, current, sendSub, colorHistory
       setTimeout(() => {
         setWon(true);
       }, 12);
-    } else if (word.length === max_letters && word.indexOf(" ") === -1) {
-      word.forEach((char) => {
+      word.forEach((char, index) => {
         if (actualword.indexOf(char) !== -1) {
-          setColorHistory((prevHistory) => ({ ...prevHistory, [char]: prevHistory[char] || indexColor(char, actualword.indexOf(char), actualword) }));
-          setLocked(true);
-          setSubmitted(true);
-
-          sendSub(idx + 1);
+          setkeyboardHistory((prevHistory) => ({ ...prevHistory, [char]: indexColor(char, word.indexOf(char), actualword) }));
         }
       });
+    } else if (word.length === max_letters && word.indexOf(" ") === -1) {
+      word.forEach((char, index) => {
+        if (actualword.indexOf(char) !== -1) {
+          setkeyboardHistory((prevHistory) => ({ ...prevHistory, [char]: indexColor(char, word.indexOf(char), actualword) }));
+        }
+      });
+      setLocked(true);
+      setSubmitted(true);
+      sendSub(idx + 1);
     }
   };
 
-  useEffect(() => {
-    if (submited) {
-      setWordHistory((prevHistory) => ({ ...prevHistory, [idx]: prevHistory[idx] || word }));
 
-    }
-  })
-
-  const indexColor = (char, index, actualword) => {
-    if (idx !== current) return;
-
-    if (actualword[index] === char) return 'green';
-
-    if (actualword.indexOf(char) !== -1) return 'orange';
-
-    return '';
-  };
+  const renderCell = (char, index) => (
+    <Cell key={index} classy={keyboardHistory[char]} char={char} />
+  );
 
   if (idx !== current) {
     return (
       <div className="row">
-        {Array.from({ length: max_letters }).map((_, index) => (
-          <React.Fragment key={index}>
-
-            {
-              wordHistory[idx] ?
-                (<Cell classy={colorHistory[wordHistory[idx][index]]} char={wordHistory[idx][index]} />) :
-                (<Cell classy=" " char=" " />)
-
-            }
-
-          </React.Fragment>
-        ))}
+        {wordHistory[idx]?.map(renderCell) || Array.from({ length: max_letters }, (_, index) => renderCell(" ", index))}
       </div>
-    )
+    );
   }
-
 
   return (
     <div className="row">
       {Array.from({ length: max_letters }).map((_, index) => (
         <React.Fragment key={index}>
-          <Cell classy={submited ? indexColor(word[index], index, actualword) : " "} char={word[index]} />
+          <Cell classy={KeyboardEvent[word[index]]} char={word[index]} />
         </React.Fragment>
-      ))}
-    </div>
+      ))}</div>
   );
 };
 

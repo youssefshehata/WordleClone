@@ -1,6 +1,7 @@
 import React from 'react'
 
 const cell = ({ classy, char }) => {
+
   const classyy = "wordle-cell " + classy
   return (
 
